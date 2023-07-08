@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "gallagherbus_fe",
+    "name": "gallagherbus",
     "slug": "gallagherbus_fe",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon_app.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
