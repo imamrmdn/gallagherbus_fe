@@ -16,39 +16,42 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 export default function Routes() {
+  const token = false;
+
   return (
     <NavigationContainer>
-      {/* <Stack.Navigator>
-        {routesAuth.map((v) => (
-          <Stack.Screen
-            key={v?.id}
-            name={v?.name}
-            component={v?.component}
-            options={{ headerShown: false }}
-          />
-        ))}
-      </Stack.Navigator> */}
-
-      {/* After Sign In */}
-      <Tab.Navigator initialRouteName="Home">
-        {routesBottomTabs.map((e) => (
-          <Tab.Screen
-            key={e.id}
-            name={e.name}
-            component={e.component}
-            options={{
-              tabBarLabel: e.tabBarLabel,
-              tabBarIcon: ({ color }) => (
-                <MaterialCommunityIcons
-                  name={e.iconName}
-                  color="#40C0E7"
-                  size={26}
-                />
-              ),
-            }}
-          />
-        ))}
-      </Tab.Navigator>
+      {token ? (
+        <Stack.Navigator>
+          {routesAuth.map((v) => (
+            <Stack.Screen
+              key={v?.id}
+              name={v?.name}
+              component={v?.component}
+              options={{ headerShown: false }}
+            />
+          ))}
+        </Stack.Navigator>
+      ) : (
+        <Tab.Navigator initialRouteName="Home">
+          {routesBottomTabs.map((e) => (
+            <Tab.Screen
+              key={e.id}
+              name={e.name}
+              component={e.component}
+              options={{
+                tabBarLabel: e.tabBarLabel,
+                tabBarIcon: ({ color }) => (
+                  <MaterialCommunityIcons
+                    name={e.iconName}
+                    color="#40C0E7"
+                    size={26}
+                  />
+                ),
+              }}
+            />
+          ))}
+        </Tab.Navigator>
+      )}
     </NavigationContainer>
   );
 }
