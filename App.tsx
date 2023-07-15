@@ -6,24 +6,26 @@
  * NAMA: Adam Muhammad Galib
  */
 
+import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+
+import { enGB, registerTranslation } from "react-native-paper-dates";
+import * as ScreenOrientation from "expo-screen-orientation";
+
+import Routes from "./src/routes/routes";
+
+registerTranslation("en-GB", enGB);
 
 export default function App() {
+  // lock orientation
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text style={{ color: "red" }}>testing app gallagher bus for thesis</Text>
-      <Text style={{ color: "red" }}>testing app gallagher bus for thesis</Text>
-      <StatusBar style="auto" />
-    </View>
+    <>
+      <StatusBar backgroundColor={"#40C0E7"} />
+      <Routes />
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "white",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
