@@ -1,67 +1,64 @@
-import {
-  Text,
-  StyleSheet,
-  View,
-  Image,
-  SafeAreaView,
-  ScrollView,
-} from "react-native";
+import { Text, ScrollView, TouchableOpacity } from "react-native";
+import React from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 
 import { Card, Title } from "react-native-paper";
+import { useGetInformasi } from "../../zustand/services/informasi";
+import { Loading } from "../../components/loading";
+import { dataSourceInfo } from "../../utils/data/infor_source";
 
-const dataBerita = [
-  {
-    key: 1,
-    source: require("../../../assets/image_news/bus2.jpg"),
-    title: "Bus Nasional",
-    desc: "Kemenperin: Industri bus nasional mampu bertahan di saat pandemi ...",
-    date: "20/07/2023",
-  },
-  {
-    key: 2,
-    source: require("../../../assets/image_news/bus1.jpeg"),
-    title: "Transporasi Umum",
-    desc: "Kemenhub: Banyak Pemda Tak Punya Perencanaan Jelas Soal Transporasi Umum ...",
-    date: "01/07/2023",
-  },
-  {
-    key: 3,
-    source: require("../../../assets/image_news/bus3.jpeg"),
-    title: "Bus Premium Karya Anak Bangsa",
-    desc: "Ragam bus premium karya anak bangsa yang unjuk gigi di busworld 2023 ...",
-    date: "10/07/2023",
-  },
-];
+import moment from "moment";
+import * as Linking from "expo-linking";
 
 export function InfoScreen() {
+  //
+  const { stateGetInformasi, getInformasi } = useGetInformasi();
+
+  React.useEffect(() => {
+    getInformasi();
+  }, []);
+
   return (
     <>
       <ScrollView style={{ margin: wp("5%") }}>
-        {dataBerita.map((e) => (
-          <Card key={e.key} style={{ marginBottom: hp("2%") }}>
-            <Card.Cover source={e.source} />
-            <Card.Content>
-              <Title style={{ fontSize: wp("5%") }}>{e.title}</Title>
-              <Text style={{ fontWeight: "300", marginBottom: hp("1%") }}>
-                {e.desc}
-              </Text>
-              <Text style={{ fontWeight: "200", fontSize: wp("3%") }}>
-                {e.date}
-              </Text>
-            </Card.Content>
-          </Card>
-        ))}
+        {!stateGetInformasi?.data ? (
+          <Loading />
+        ) : (
+          stateGetInformasi?.data.map((e, i) => (
+            <TouchableOpacity key={i} onPress={() => Linking.openURL(e.url)}>
+              <Card key={e.id} style={{ marginBottom: hp("2%") }}>
+                <Card.Cover
+                  source={
+                    dataSourceInfo[i]?.source ??
+                    require("../../../assets/image_news/bus.jpeg")
+                  }
+                />
+                <Card.Content>
+                  <Title style={{ fontSize: wp("5%") }}>{e.title}</Title>
+                  <Text style={{ fontWeight: "300", marginBottom: hp("1%") }}>
+                    {e.title}
+                  </Text>
+                  <Text style={{ fontWeight: "200", fontSize: wp("3%") }}>
+                    {e.desc_informasi}
+                  </Text>
+                  <Text
+                    style={{
+                      marginTop: hp("1%"),
+                      fontWeight: "200",
+                      fontSize: wp("3%"),
+                    }}
+                  >
+                    {`Tanggal: ${moment(e.created_at).format("DD-MM-YYYY")}`}
+                  </Text>
+                </Card.Content>
+              </Card>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    margin: wp("5%"),
-  },
-});

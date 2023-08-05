@@ -9,12 +9,9 @@
 import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 
-import { enGB, registerTranslation } from "react-native-paper-dates";
 import * as ScreenOrientation from "expo-screen-orientation";
 
 import Routes from "./src/routes/routes";
-
-registerTranslation("en-GB", enGB);
 
 export default function App() {
   // lock orientation

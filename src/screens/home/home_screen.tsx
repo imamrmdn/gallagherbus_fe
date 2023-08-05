@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import React from "react";
 import {
   Text,
   StyleSheet,
@@ -22,60 +22,70 @@ import {
   RadioButton,
   Button,
 } from "react-native-paper";
-import { dataJadwalBus } from "../../utils/data/jadwal_bus";
-import { koridor_schedule } from "../../utils/data/example_data";
+import moment from "moment";
+import {
+  useGetJadwalKoridor,
+  useGetKoridorName,
+} from "../../zustand/services/jadwal";
+import { Loading } from "../../components/loading";
+import { HalteSchedule } from "../../zustand/interface/response.interface";
 
 export function HomeScreen() {
   //
-  const [visible, setVisible] = useState<boolean>(false);
-  const [detail, setDetail] = useState<boolean>(false);
-  const [valueKoridor, setValueKoridor] = useState("");
-  const [koridorName, setKoridorName] = useState("");
-  const [scheduleKoridor, setScheduleKoridor] = useState<any>([]);
+  const { stateGetJadwalKoridor, getJadwalKoridor } = useGetJadwalKoridor();
+  const { stateGetKoridorName, getKoridorName } = useGetKoridorName();
+
+  //
+  const [visible, setVisible] = React.useState<boolean>(false);
+  const [detail, setDetail] = React.useState<boolean>(false);
+  const [valueKoridor, setValueKoridor] = React.useState("");
+  const [koridorName, setKoridorName] = React.useState("0");
+  const [date, setDate] = React.useState(new Date());
+  const [detailHalte, setDetailHalte] = React.useState<HalteSchedule[]>([]);
 
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
 
-  const showDetail = () => setDetail(true);
-  const hideDetail = () => setDetail(false);
-
-  //koridor name
-  const koridor_name = koridor_schedule.map((e) => ({
-    key: e.koridor_key,
-    name: e.koridor_name,
-  }));
-
-  const onHandleFilterKoridor = () => {
-    //
-    const koridor_name = koridor_schedule.map((e) => ({
-      key: e.koridor_key,
-      name: e.koridor_name,
-    }));
-
-    console.log("new_data", koridor_name);
-
-    showModal();
+  const showDetail = (e: HalteSchedule[]) => {
+    setDetailHalte(e);
+    setDetail(true);
+  };
+  const hideDetail = () => {
+    setDetail(!detail);
   };
 
+  const onHandleFilterKoridor = () => showModal();
+
   const onChangeFilterKoridor = (val: string) => {
-    console.log({ val });
     setValueKoridor(val);
   };
 
   const onOkFilterKoridor = () => {
-    console.log("koridor name:", valueKoridor);
-    const new_schedule_koridor = koridor_schedule.filter(
-      (e) => e.koridor_name === valueKoridor
-    );
-
-    console.log(
-      "new jadwal koridor:",
-      new_schedule_koridor[0].koridor_schedule
-    );
     setKoridorName(valueKoridor);
-    setScheduleKoridor(new_schedule_koridor[0].koridor_schedule);
+
     hideModal();
   };
+
+  React.useEffect(() => {
+    getKoridorName();
+    getJadwalKoridor(koridorName, 1);
+
+    const interval = setInterval(() => {
+      setDate(new Date());
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [koridorName]);
+
+  if (!stateGetKoridorName?.data) {
+    return (
+      <View style={{ margin: wp("5%") }}>
+        <Loading />
+      </View>
+    );
+  }
 
   return (
     <>
@@ -96,10 +106,14 @@ export function HomeScreen() {
                   fontWeight: "300",
                 }}
               >
-                Koridor Name: {koridorName}
+                Koridor Name: {stateGetJadwalKoridor?.koridor_name ?? ""}
               </Text>
-              <Text style={{ fontWeight: "300" }}>13/07/2023 19:43</Text>
+              <Text style={{ fontWeight: "300", fontSize: wp("3.5%") }}>
+                tanggal/jam: {moment(date).format("DD-MM-YYYY")}{" "}
+                {date.toLocaleTimeString()}
+              </Text>
             </View>
+            {/* Filter koridor */}
             <TouchableOpacity onPress={() => onHandleFilterKoridor()}>
               <MaterialCommunityIcons
                 style={{ marginTop: hp("4%"), marginRight: wp("2%") }}
@@ -121,21 +135,38 @@ export function HomeScreen() {
                 <View>
                   <Text style={{ marginBottom: hp("2%") }}>Filter Koridor</Text>
                   <Divider />
-                  <RadioButton.Group
-                    onValueChange={(newValue) =>
-                      onChangeFilterKoridor(newValue)
-                    }
-                    value={valueKoridor}
-                  >
-                    {koridor_name.map((e) => (
-                      <View key={e.key} style={{ flexDirection: "row" }}>
-                        <RadioButton value={e.name} />
-                        <Text style={{ marginTop: hp("1%") }}>
-                          {"Koridor " + e.name}
-                        </Text>
-                      </View>
-                    ))}
-                  </RadioButton.Group>
+                  {!stateGetKoridorName?.data ? (
+                    <View
+                      style={{ alignItems: "center", marginTop: hp("10%") }}
+                    >
+                      <Text>No Data</Text>
+                      <MaterialCommunityIcons
+                        style={{ marginRight: wp("2%") }}
+                        name="folder-remove-outline"
+                        color="black"
+                        size={50}
+                      />
+                    </View>
+                  ) : (
+                    <>
+                      <RadioButton.Group
+                        onValueChange={(newValue) =>
+                          onChangeFilterKoridor(newValue)
+                        }
+                        value={valueKoridor}
+                      >
+                        {stateGetKoridorName?.data.map((e) => (
+                          <View key={e.id} style={{ flexDirection: "row" }}>
+                            <RadioButton value={e.koridor_name} />
+                            <Text style={{ marginTop: hp("1%") }}>
+                              {"Koridor " + e.koridor_name}
+                            </Text>
+                          </View>
+                        ))}
+                      </RadioButton.Group>
+                    </>
+                  )}
+
                   <Button
                     style={{ marginTop: hp("2%") }}
                     buttonColor="#FCC21B"
@@ -148,10 +179,10 @@ export function HomeScreen() {
             </Portal>
           </View>
           <Divider />
+          {/* List halte  */}
           <ScrollView style={{ marginTop: hp("2%"), marginBottom: hp("10%") }}>
             {/* Table list of content */}
-
-            {scheduleKoridor.length === 0 ? (
+            {!stateGetJadwalKoridor?.halte ? (
               <View style={{ alignItems: "center", marginTop: hp("10%") }}>
                 <Text>No Data</Text>
                 <MaterialCommunityIcons
@@ -162,9 +193,9 @@ export function HomeScreen() {
                 />
               </View>
             ) : (
-              scheduleKoridor.map((e: any) => (
+              stateGetJadwalKoridor?.halte.map((e, i) => (
                 <View
-                  key={e.key}
+                  key={e.id}
                   style={{
                     backgroundColor: "white",
                     borderRadius: 10,
@@ -173,45 +204,55 @@ export function HomeScreen() {
                   }}
                 >
                   <List.Item
-                    title={"Halte: " + e.halte}
+                    key={e.id + "s"}
+                    title={"Halte: " + e.halte_name}
                     description={
-                      <View style={{ flexDirection: "column" }}>
+                      <View
+                        key={e.id + "t"}
+                        style={{ flexDirection: "column" }}
+                      >
                         <Text
+                          key={e.id + "p"}
                           style={{
                             fontSize: wp("3%"),
                             fontWeight: "300",
                           }}
                         >
-                          date: {e.date}
+                          date: {moment(e.created_at).format("DD-MM-YYYY")}
                         </Text>
                         <Text
+                          key={i + 2}
                           style={{
                             fontSize: wp("3%"),
                             fontWeight: "300",
                           }}
                         >
-                          departure time: {e.deparature_time_in_koridor}
+                          arrival time: {e.arrival_time_in_halte}
                         </Text>
                         <Text
+                          key={e.id + "1"}
                           style={{
                             fontSize: wp("3%"),
                             fontWeight: "300",
                           }}
                         >
-                          arrival time: {e.arrival_time_in_koridor}
+                          departure time: {e.departure_time_in_halte}
                         </Text>
                       </View>
                     }
                     left={(props) => (
-                      <List.Icon {...props} icon="bus" color="#FCC21B" />
+                      <List.Icon
+                        key={e.id + "u"}
+                        {...props}
+                        icon="bus"
+                        color="#FCC21B"
+                      />
                     )}
                     right={(props) => (
                       <>
-                        <TouchableOpacity onPress={showDetail}>
-                          <List.Icon {...props} icon="dots-vertical" />
-                        </TouchableOpacity>
-                        <Portal>
+                        <Portal key={i + 45}>
                           <Modal
+                            key={i + 6}
                             visible={detail}
                             onDismiss={hideDetail}
                             contentContainerStyle={{
@@ -220,54 +261,43 @@ export function HomeScreen() {
                               margin: wp("5%"),
                             }}
                           >
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                justifyContent: "space-between",
-                                //marginBottom: hp("3%"),
-                              }}
-                            >
-                              <Text>Detail Halte</Text>
-                              <TouchableOpacity onPress={showModal}>
-                                <MaterialCommunityIcons
-                                  style={{
-                                    marginRight: wp("2%"),
-                                  }}
-                                  name="filter"
-                                  color="#FCC21B"
-                                  size={26}
-                                />
-                              </TouchableOpacity>
-                            </View>
+                            <Text>Detail Halte</Text>
                             <Divider
                               style={{
                                 marginTop: hp("1%"),
                                 marginBottom: hp("3%"),
                               }}
                             />
-                            {e.schedule_koridor.map((e: any) => (
-                              <List.Item
-                                key={e.index}
-                                title={"Bus: " + e.bus_queue}
-                                description={
-                                  <View style={{ flexDirection: "column" }}>
-                                    <Text>
-                                      {"departure time bus: " +
-                                        e.deparature_time_bus}
-                                    </Text>
-                                    <Text>
-                                      {"arrival time bus: " +
-                                        e.arrival_time_bus}
-                                    </Text>
-                                  </View>
-                                }
-                              />
+                            {detailHalte.map((e, i) => (
+                              <ScrollView key={e.id}>
+                                <View style={{ marginBottom: hp("4%") }}>
+                                  <Text
+                                    key={i + 1}
+                                    style={{ fontWeight: "300" }}
+                                  >{`Bus Name: ${e.bus_name}`}</Text>
+                                  <Text
+                                    key={i + 2}
+                                    style={{ fontWeight: "300" }}
+                                  >{`Arrival time bus: ${e.arrival_time_bus}`}</Text>
+                                  <Text
+                                    key={i + 3}
+                                    style={{ fontWeight: "300" }}
+                                  >{`Departure time bus: ${e.departure_time_bus}`}</Text>
+                                </View>
+                              </ScrollView>
                             ))}
-                            <Button onPress={hideDetail}>
-                              <Text style={{ color: "#40C0E7" }}>Close</Text>
-                            </Button>
                           </Modal>
                         </Portal>
+                        <TouchableOpacity
+                          key={e.id + "l"}
+                          onPress={() => showDetail(e.halte_schedule)}
+                        >
+                          <List.Icon
+                            key={i + 8}
+                            {...props}
+                            icon="dots-vertical"
+                          />
+                        </TouchableOpacity>
                       </>
                     )}
                   />

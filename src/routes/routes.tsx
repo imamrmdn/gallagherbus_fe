@@ -1,26 +1,31 @@
+import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { SignInScreen } from "../screens/sign_in/sign_in_screen";
 import { routesAuth } from "./routes.auth";
-import { HomeScreen } from "../screens/home/home_screen";
-import { InfoScreen } from "../screens/info/info_screen";
-import { ProfileScreen } from "../screens/profile/profile_screen";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
-import { Text, View } from "react-native";
 import { routesBottomTabs } from "./routes.bottom.tab";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { useLogin } from "../zustand/services/auth";
 
 //
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 export default function Routes() {
-  const token = false;
+  //
+  const { token, isLoad, setLogin } = useLogin();
+
+  const checkToken = async () => {
+    await setLogin();
+  };
+
+  React.useEffect(() => {
+    checkToken();
+  }, []);
 
   return (
     <NavigationContainer>
-      {token ? (
+      {!token ? (
         <Stack.Navigator>
           {routesAuth.map((v) => (
             <Stack.Screen

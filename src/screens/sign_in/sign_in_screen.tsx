@@ -1,7 +1,4 @@
-//state
-import { useState } from "react";
-
-//component
+import React from "react";
 import { Text, StyleSheet, View, Image, SafeAreaView } from "react-native";
 
 //thir party
@@ -9,14 +6,55 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button, Snackbar } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
+import { useLogin } from "../../zustand/services/auth";
 
 export function SignInScreen() {
   //
   const navigation = useNavigation() as any;
 
-  const onHandleSignUp = () => {
+  const { loginUser } = useLogin();
+
+  //
+  const [name, setName] = React.useState<string>("");
+  const [password, setPassword] = React.useState<string>("");
+  const [secure, setSecure] = React.useState<boolean>(false);
+
+  //
+  const [errLogin, setErrLogin] = React.useState<boolean>(false);
+  const [errMsg, setErrMsg] = React.useState<string>("");
+  const [loadBtn, setLoadBtn] = React.useState<boolean>(false);
+
+  //
+  const onHandleSignIn = () => {
+    setLoadBtn(true);
+    if (name === "" || password === "") {
+      setLoadBtn(false);
+      setErrLogin(true);
+      setErrMsg("Name and Password cannot be null");
+    }
+
+    if (name !== "" && password !== "") {
+      loginUser({ name, password })
+        .then((response) => {
+          setLoadBtn(false);
+
+          if (response?.success) {
+            console.log(response?.message);
+          }
+          //setName('')
+          //setPassword('')
+        })
+        .catch((err) => {
+          setLoadBtn(false);
+          setErrLogin(true);
+          setErrMsg("Something wrong or user not found");
+        });
+    }
+  };
+
+  const onHandleToSignUp = () => {
     navigation.navigate("SignUp");
   };
 
@@ -37,9 +75,11 @@ export function SignInScreen() {
         {/* Form input id & password */}
         <TextInput
           mode="outlined"
-          label="Id"
-          placeholder="Type something"
-          right={<TextInput.Affix text="/100" />}
+          label="Id/Username"
+          placeholder="type your id/username"
+          textContentType="emailAddress"
+          value={name}
+          onChangeText={setName}
         />
 
         <View style={styles.boxInput} />
@@ -47,8 +87,17 @@ export function SignInScreen() {
         <TextInput
           mode="outlined"
           label="Password"
-          placeholder="Type something"
-          right={<TextInput.Affix text="/100" />}
+          placeholder="type your password"
+          textContentType="password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!secure}
+          right={
+            <TextInput.Icon
+              icon={secure ? "eye" : "eye-off"}
+              onPress={() => setSecure(!secure)}
+            />
+          }
         />
         <View
           style={{
@@ -60,7 +109,7 @@ export function SignInScreen() {
           <Text>sudah punya akun?</Text>
           <Text
             style={{ textDecorationLine: "underline" }}
-            onPress={onHandleSignUp}
+            onPress={onHandleToSignUp}
           >
             {" "}
             Sign Up
@@ -72,7 +121,8 @@ export function SignInScreen() {
         <Button
           style={styles.button}
           buttonColor="#40C0E7"
-          onPress={() => console.log("Sign In")}
+          loading={loadBtn}
+          onPress={() => onHandleSignIn()}
         >
           <Text style={{ color: "white" }}>Sign In</Text>
         </Button>
@@ -93,6 +143,14 @@ export function SignInScreen() {
 
         {/* Sign in button */}
       </SafeAreaView>
+      <Snackbar
+        style={{ backgroundColor: "red" }}
+        duration={700}
+        visible={errLogin}
+        onDismiss={() => setErrLogin(false)}
+      >
+        <Text>{errMsg}</Text>
+      </Snackbar>
     </>
   );
 }
