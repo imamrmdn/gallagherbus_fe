@@ -21,6 +21,7 @@ import {
   Modal,
   RadioButton,
   Button,
+  Snackbar,
 } from "react-native-paper";
 import moment from "moment";
 import {
@@ -42,6 +43,7 @@ export function HomeScreen() {
   const [koridorName, setKoridorName] = React.useState("0");
   const [date, setDate] = React.useState(new Date());
   const [detailHalte, setDetailHalte] = React.useState<HalteSchedule[]>([]);
+  const [okFilter, setOkFilter] = React.useState<boolean>(false);
 
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
@@ -61,8 +63,11 @@ export function HomeScreen() {
   };
 
   const onOkFilterKoridor = () => {
-    setKoridorName(valueKoridor);
-
+    if (valueKoridor == "" || valueKoridor === "0") {
+      setOkFilter(true);
+    } else {
+      setKoridorName(valueKoridor);
+    }
     hideModal();
   };
 
@@ -307,6 +312,14 @@ export function HomeScreen() {
           </ScrollView>
         </View>
       </PaperProvider>
+      <Snackbar
+        style={{ backgroundColor: "yellow" }}
+        duration={700}
+        visible={okFilter}
+        onDismiss={() => setOkFilter(false)}
+      >
+        <Text>Nothing is filtered</Text>
+      </Snackbar>
     </>
   );
 }
